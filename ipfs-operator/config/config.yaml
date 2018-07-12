@@ -1,0 +1,3 @@
+apiVersion: storage.example.com/v1alpha1
+kind: Ipfs
+projectName: ipfs-operator

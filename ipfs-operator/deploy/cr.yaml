@@ -1,0 +1,4 @@
+apiVersion: "storage.example.com/v1alpha1"
+kind: "Ipfs"
+metadata:
+  name: "example"
