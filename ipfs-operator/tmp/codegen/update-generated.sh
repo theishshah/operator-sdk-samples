@@ -8,5 +8,5 @@ vendor/k8s.io/code-generator/generate-groups.sh \
 deepcopy \
 github.com/operator-framework/operator-sdk-samples/ipfs-operator/pkg/generated \
 github.com/operator-framework/operator-sdk-samples/ipfs-operator/pkg/apis \
-storage:v1alpha1 \
+extensions:v1beta1 \
 --go-header-file "./tmp/codegen/boilerplate.go.txt"

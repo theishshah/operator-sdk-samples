@@ -1,4 +1,4 @@
-package v1alpha1
+package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -6,24 +6,24 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type IpfsList struct {
+type DeploymentList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata"`
-	Items           []Ipfs `json:"items"`
+	Items           []Deployment `json:"items"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type Ipfs struct {
+type Deployment struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata"`
-	Spec              IpfsSpec   `json:"spec"`
-	Status            IpfsStatus `json:"status,omitempty"`
+	Spec              DeploymentSpec   `json:"spec"`
+	Status            DeploymentStatus `json:"status,omitempty"`
 }
 
-type IpfsSpec struct {
+type DeploymentSpec struct {
 	Size int32 `json:"size"`
 }
-type IpfsStatus struct {
+type DeploymentStatus struct {
 	Nodes []string `json:"nodes"`
 }

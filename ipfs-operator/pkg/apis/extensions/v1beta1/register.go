@@ -1,4 +1,4 @@
-package v1alpha1
+package v1beta1
 
 import (
 	sdkK8sutil "github.com/operator-framework/operator-sdk/pkg/util/k8sutil"
@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	version   = "v1alpha1"
-	groupName = "storage.example.com"
+	version   = "v1beta1"
+	groupName = "extensions"
 )
 
 var (
@@ -27,8 +27,8 @@ func init() {
 // addKnownTypes adds the set of types defined in this package to the supplied scheme.
 func addKnownTypes(scheme *runtime.Scheme) error {
 	scheme.AddKnownTypes(SchemeGroupVersion,
-		&Ipfs{},
-		&IpfsList{},
+		&Deployment{},
+		&DeploymentList{},
 	)
 	metav1.AddToGroupVersion(scheme, SchemeGroupVersion)
 	return nil

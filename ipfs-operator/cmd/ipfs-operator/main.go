@@ -23,8 +23,8 @@ func main() {
 
 	sdk.ExposeMetricsPort()
 
-	resource := "storage.example.com/v1alpha1"
-	kind := "Ipfs"
+	resource := "extensions/v1beta1"
+	kind := "Deployment"
 	namespace, err := k8sutil.GetWatchNamespace()
 	if err != nil {
 		logrus.Fatalf("Failed to get watch namespace: %v", err)

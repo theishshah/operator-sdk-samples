@@ -4,7 +4,7 @@ metadata:
   name: ipfs-operator
 rules:
 - apiGroups:
-  - storage.example.com
+  - extensions
   resources:
   - "*"
   verbs:
