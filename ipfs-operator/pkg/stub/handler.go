@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"reflect"
 
-	v1alpha1 "github.com/example-inc/memcached-operator/pkg/apis/cache/v1alpha1"
+	v1beta1 "github.com/operator-framework/operator-sdk-samples/ipfs-operator/pkg/apis/extensions/v1beta1"
 
 	"github.com/operator-framework/operator-sdk/pkg/sdk"
 	appsv1 "k8s.io/api/apps/v1"
@@ -24,7 +24,7 @@ type Handler struct {
 
 func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 	switch o := event.Object.(type) {
-	case *v1alpha1.Ipfs:
+	case *v1beta1.Deployment:
 		ipfs := o
 
 		// Ignore the delete event since the garbage collector will clean up all secondary resources for the CR
@@ -34,8 +34,14 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 		}
 
 		// Create the deployment if it doesn't exist
-		dep := deploymentForIpfs(ipfs)
+		dep := deploymentForBootstrap(ipfs)
 		err := sdk.Create(dep)
+		if err != nil && !apierrors.IsAlreadyExists(err) {
+			return fmt.Errorf("failed to create deployment: %v", err)
+		}
+
+		dep = deploymentForIpfs(ipfs)
+		err = sdk.Create(dep)
 		if err != nil && !apierrors.IsAlreadyExists(err) {
 			return fmt.Errorf("failed to create deployment: %v", err)
 		}
@@ -75,13 +81,13 @@ func (h *Handler) Handle(ctx context.Context, event sdk.Event) error {
 }
 
 // deploymentForIpfs returns a ipfs Deployment object
-func deploymentForIpfs(m *v1alpha1.Ipfs) *appsv1.Deployment {
+func deploymentForIpfs(m *v1beta1.Deployment) *appsv1.Deployment {
 	ls := labelsForIpfs(m.Name)
 	replicas := m.Spec.Size
 
 	dep := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "apps/v1",
+			APIVersion: "extensions/v1beta1",
 			Kind:       "Deployment",
 		},
 		ObjectMeta: metav1.ObjectMeta{
@@ -103,27 +109,86 @@ func deploymentForIpfs(m *v1alpha1.Ipfs) *appsv1.Deployment {
 							{
 								ContainerPort: 4001,
 								Name:          "swarm",
-								Protocol:	   "TCP",},
+								Protocol:      "TCP"},
 							{
 								ContainerPort: 5001,
 								Name:          "api",
-								Protocol:	   "TCP",
+								Protocol:      "TCP",
 							},
 							{
 								ContainerPort: 9094,
 								Name:          "clusterapi",
-								Protocol:	   "TCP",
+								Protocol:      "TCP",
 							},
 							{
 								ContainerPort: 9095,
 								Name:          "clusterproxy",
-								Protocol:	   "TCP",
+								Protocol:      "TCP",
 							},
 							{
 								ContainerPort: 9096,
 								Name:          "cluster",
-								Protocol:	   "TCP",
-							}
+								Protocol:      "TCP",
+							},
+						},
+					}},
+				},
+			},
+		},
+	}
+	addOwnerRefToObject(dep, asOwner(m))
+	return dep
+}
+
+func deploymentForBootstrap(m *v1beta1.Deployment) *appsv1.Deployment {
+	ls := map[string]string{"app": "ipfs", "role": "bootstrap"}
+	replicas := m.Spec.Size
+
+	dep := &appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			APIVersion: "extensions/v1beta1",
+			Kind:       "Deployment",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      m.Name,
+			Namespace: m.Namespace,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &replicas,
+			Template: v1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: ls,
+				},
+				Spec: v1.PodSpec{
+					Containers: []v1.Container{{
+						Image:   "ipfs:1.4.36-alpine",
+						Name:    "ipfs",
+						Command: []string{`["/usr/local/bin/start-daemons.sh"]`},
+						Ports: []v1.ContainerPort{
+							{
+								ContainerPort: 4001,
+								Name:          "swarm",
+								Protocol:      "TCP"},
+							{
+								ContainerPort: 5001,
+								Name:          "api",
+								Protocol:      "TCP",
+							},
+							{
+								ContainerPort: 9094,
+								Name:          "clusterapi",
+								Protocol:      "TCP",
+							},
+							{
+								ContainerPort: 9095,
+								Name:          "clusterproxy",
+								Protocol:      "TCP",
+							},
+							{
+								ContainerPort: 9096,
+								Name:          "cluster",
+								Protocol:      "TCP",
+							},
 						},
 					}},
 				},
@@ -146,7 +211,7 @@ func addOwnerRefToObject(obj metav1.Object, ownerRef metav1.OwnerReference) {
 }
 
 // asOwner returns an OwnerReference set as the ipfs CR
-func asOwner(m *v1alpha1.Ipfs) metav1.OwnerReference {
+func asOwner(m *v1beta1.Deployment) metav1.OwnerReference {
 	trueVar := true
 	return metav1.OwnerReference{
 		APIVersion: m.APIVersion,
