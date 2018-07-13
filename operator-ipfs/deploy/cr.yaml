@@ -1,0 +1,6 @@
+apiVersion: "app.example.com/v1beta1"
+kind: "Deployment"
+metadata:
+  name: "example-ipfs"
+spec:
+  size: 3
